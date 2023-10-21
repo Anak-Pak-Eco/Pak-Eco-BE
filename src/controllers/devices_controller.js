@@ -1,6 +1,7 @@
 const firebaseApp = require('../configs/firebase');
 
 const devicesRef = 'devices';
+const historyRef = 'histories';
 
 module.exports = {
   getDevices: async (req, res) => {
@@ -137,6 +138,94 @@ module.exports = {
     } catch (e) {
       return res.status(400).json({
         message: 'Failed to delete device',
+        status: false,
+        data: e.message,
+      });
+    }
+  },
+  addHistoryDevice: async (req, res) => {
+    try {
+      const {
+        serial_number: serialNumber,
+        current_ph: currentPh,
+        current_ppm: currentPpm,
+      } = req.body;
+
+      const history = await firebaseApp.database()
+          .ref(devicesRef)
+          .child(serialNumber)
+          .get();
+
+      if (history.exists()) {
+        const addHistory = await firebaseApp.firestore()
+            .collection(historyRef)
+            .add({
+              serial_number: serialNumber,
+              current_ph: currentPh,
+              current_ppm: currentPpm,
+              created_at: new Date(),
+            });
+
+        const result = await addHistory.get();
+
+        return res.status(200).json({
+          message: 'Success to add device history',
+          status: true,
+          data: result.data(),
+        });
+      }
+
+      return res.status(404).json({
+        message: 'Failed to add device history',
+        status: false,
+        data: 'Device not found',
+      });
+    } catch (e) {
+      return res.status(400).json({
+        message: 'Failed to add device history',
+        status: false,
+        data: e.message,
+      });
+    }
+  },
+  getDeviceHistories: async (req, res) => {
+    try {
+      const {
+        id,
+      } = req.params;
+
+      const history = await firebaseApp.database()
+          .ref(devicesRef)
+          .child(id)
+          .get();
+
+      if (history.exists()) {
+        const historiesDocs = await firebaseApp.firestore()
+            .collection(historyRef)
+            .where('serial_number', '==', id)
+            .get();
+
+        const histories = [];
+
+        historiesDocs.docs.forEach((result) => {
+          histories.push(result.data());
+        });
+
+        return res.status(200).json({
+          message: 'Success to add device history',
+          status: true,
+          data: histories,
+        });
+      }
+
+      return res.status(404).json({
+        message: 'Failed to add device history',
+        status: false,
+        data: 'Device not found',
+      });
+    } catch (e) {
+      return res.status(400).json({
+        message: 'Failed to get device history',
         status: false,
         data: e.message,
       });

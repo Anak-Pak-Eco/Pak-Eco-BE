@@ -1,6 +1,33 @@
 const firebaseApp = require('../configs/firebase');
 
+const notificationRef = 'notifications';
+
 module.exports = {
+  getNotifications: async (req, res) => {
+    try {
+      const notifications = [];
+
+      const notificationDocs = await firebaseApp.firestore()
+          .collection(notificationRef)
+          .get();
+
+      notificationDocs.forEach((notification) => {
+        notifications.push(notification.data());
+      });
+
+      return res.status(200).json({
+        message: 'Success to get notification',
+        status_code: 200,
+        data: notifications,
+      });
+    } catch (e) {
+      return res.status(400).json({
+        message: 'Failed to get notification',
+        status_code: 400,
+        data: e.message,
+      });
+    }
+  },
   sendNotification: async (req, res) => {
     const {
       title,
@@ -13,14 +40,14 @@ module.exports = {
       const notification = {
         title: title,
         body: body,
-        device_id: deviceId ? deviceId : '',
-        registation_token: registrationToken ? registrationToken : '',
+        device_id: deviceId ? deviceId : null,
+        registation_token: registrationToken ? registrationToken : null,
         action: deviceId ? 'alert' : 'push-notification',
         created_date: new Date(),
       };
 
       const newNotification = await firebaseApp.firestore()
-          .collection('notifications')
+          .collection(notificationRef)
           .add(notification);
 
       console.log('New Notification ' + newNotification);

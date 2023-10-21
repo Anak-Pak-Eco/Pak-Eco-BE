@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use('/notification', notificationRoute);
+app.use('/notifications', notificationRoute);
 app.use('/devices', devicesRoute);
 app.use('/plants', plantsRoute);
 app.get('/tools/generate-uuid', (req, res) => {
