@@ -20,6 +20,8 @@ module.exports = {
           current_ph: value.child('current_ph'),
           current_ppm: value.child('current_ppm'),
           current_steps: value.child('current_steps'),
+          created_at: value.child('created_at'),
+          status: value.child('status'),
         });
       });
 
@@ -57,6 +59,8 @@ module.exports = {
             current_ph: devicesResponse.child('current_ph'),
             current_ppm: devicesResponse.child('current_ppm'),
             current_steps: devicesResponse.child('current_steps'),
+            status: devicesResponse.child('status'),
+            created_at: devicesResponse.child('created_at'),
           },
         });
       } else {
@@ -83,6 +87,7 @@ module.exports = {
       current_ph: currentPh,
       current_ppm: currentPpm,
       current_steps: currentSteps,
+      status: status,
     } = req.body;
 
     try {
@@ -97,6 +102,7 @@ module.exports = {
             current_ppm: currentPpm,
             current_steps: currentSteps,
             created_at: new Date(),
+            status: status ? status : 'ON',
           });
 
       return res.status(200).json({

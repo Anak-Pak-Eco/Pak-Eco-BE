@@ -1,6 +1,8 @@
 const {Filter} = require('@google-cloud/firestore');
 const firebaseApp = require('../configs/firebase');
 
+const plantRef = 'plants';
+
 module.exports = {
   getPlants: async (req, res) => {
     try {
@@ -9,7 +11,7 @@ module.exports = {
       } = req.query;
 
       let plants = firebaseApp.firestore()
-          .collection('plants');
+          .collection(plantRef);
 
       if (usersId) {
         plants = plants.where(
@@ -28,7 +30,7 @@ module.exports = {
         message: 'Success to get plants',
         status_code: 200,
         data: plants.docs.map((snapshot) => {
-          return snapshot.data();
+          return {id: snapshot.id, ...snapshot.data()};
         }),
       });
     } catch (e) {
@@ -49,7 +51,7 @@ module.exports = {
       } = req.body;
 
       const plants = await firebaseApp.firestore()
-          .collection('plants')
+          .collection(plantRef)
           .add({
             name,
             image_url: imageUrl,
@@ -62,6 +64,71 @@ module.exports = {
         status_code: 200,
         data: plants.docs,
       });
+    } catch (e) {
+      return res.status(400).json({
+        message: 'Failed to create plants',
+        status_code: 400,
+        data: e.message,
+      });
+    }
+  },
+  editPlants: async (req, res) => {
+    try {
+      const {id} = req.params;
+      const {
+        name,
+        image_url: imageUrl,
+        users_id: usersId,
+        phases,
+      } = req.body;
+      const plant = await firebaseApp.firestore()
+          .collection(plantRef)
+          .doc(id)
+          .get();
+
+      if (plant.exists) {
+        let plantUpdated = firebaseApp.firestore()
+            .collection(plantRef)
+            .doc(id);
+
+        if (name) {
+          await plantUpdated.update({
+            name,
+          });
+        }
+
+        if (imageUrl) {
+          await plantUpdated.update({
+            image_url: imageUrl,
+          });
+        }
+
+        if (usersId) {
+          await plantUpdated.update({
+            users_id: usersId,
+          });
+        }
+
+        if (phases) {
+          await plantUpdated.update({
+            phases,
+          });
+        }
+
+        plantUpdated = await plantUpdated.get();
+
+        return res.status(200).json({
+          message: 'Success to update plants',
+          status_code: 200,
+          data: plantUpdated.data(),
+        });
+      } else {
+        return res.status(404).json({
+          message: 'Failed to update plants',
+          status_code: 404,
+          data: e.message,
+        });
+      }
     } catch (e) {
       return res.status(400).json({
         message: 'Failed to create plants',

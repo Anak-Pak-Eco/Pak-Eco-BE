@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 app.use('/notifications', notificationRoute);
 app.use('/devices', devicesRoute);
 app.use('/plants', plantsRoute);
+
 app.get('/tools/generate-uuid', (req, res) => {
   const uuid = crypto.randomUUID();
   return res.status(200).json({
