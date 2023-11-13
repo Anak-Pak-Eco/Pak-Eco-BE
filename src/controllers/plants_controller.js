@@ -8,18 +8,27 @@ module.exports = {
     try {
       const {
         users_id: usersId,
+        user_only: userOnly,
       } = req.query;
 
       let plants = firebaseApp.firestore()
           .collection(plantRef);
 
       if (usersId) {
-        plants = plants.where(
-            Filter.or(
-                Filter.where('users_id', '==', usersId),
-                Filter.where('users_id', '==', null),
-            ),
-        );
+        if (userOnly == 'true') {
+          plants = plants.where(
+              Filter.or(
+                  Filter.where('users_id', '==', usersId),
+              ),
+          );
+        } else {
+          plants = plants.where(
+              Filter.or(
+                  Filter.where('users_id', '==', usersId),
+                  Filter.where('users_id', '==', null),
+              ),
+          );
+        }
       } else {
         plants = plants.where('users_id', '==', null);
       }
@@ -133,6 +142,29 @@ module.exports = {
       return res.status(400).json({
         message: 'Failed to create plants',
         status_code: 400,
+        data: e.message,
+      });
+    }
+  },
+  deletePlant: async (req, res) => {
+    const {id} = req.params;
+
+    await firebaseApp.firestore()
+        .collection(plantRef)
+        .doc(id)
+        .delete();
+
+    try {
+      await firebaseApp.database().ref(plantRef).child(id).remove();
+      return res.status(200).json({
+        message: 'Success to delete plant',
+        status: false,
+        data: null,
+      });
+    } catch (e) {
+      return res.status(400).json({
+        message: 'Failed to delete plant',
+        status: false,
         data: e.message,
       });
     }

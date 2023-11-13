@@ -12,7 +12,12 @@ module.exports = {
           .get();
 
       notificationDocs.forEach((notification) => {
-        notifications.push(notification.data());
+        const notificationData = notification.data();
+        notifications.push({
+          id: notification.id,
+          ...notificationData,
+          created_date: notificationData.created_date.toDate(),
+        });
       });
 
       return res.status(200).json({
@@ -41,7 +46,7 @@ module.exports = {
         title: title,
         body: body,
         device_id: deviceId ? deviceId : null,
-        registation_token: registrationToken ? registrationToken : null,
+        registration_token: registrationToken ? registrationToken : null,
         action: deviceId ? 'alert' : 'push-notification',
         created_date: new Date(),
       };
